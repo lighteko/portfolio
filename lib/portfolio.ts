@@ -37,10 +37,6 @@ export type SkillsSection = {
   items?: string[];
 };
 
-export type LinksSection = {
-  items?: Array<{ label: string; href: string }>;
-};
-
 export type NowSection = {
   title?: string;
   items?: string[];
@@ -95,7 +91,6 @@ export async function getPortfolioSections() {
       hero: null as HeroSection | null,
       about: null as AboutSection | null,
       skills: null as SkillsSection | null,
-      links: null as LinksSection | null,
       now: null as NowSection | null,
     };
   }
@@ -103,21 +98,19 @@ export async function getPortfolioSections() {
   const result = await query<SectionRow>(
     `select section_key, content_json
      from ${tableName("portfolio_sections")}
-     where section_key in ('hero', 'about', 'skills', 'links', 'now')`
+     where section_key in ('hero', 'about', 'skills', 'now')`
   );
 
   const map = new Map(result.rows.map((row) => [row.section_key, asObject(row.content_json)]));
   const hero = map.get("hero") ?? null;
   const about = map.get("about") ?? null;
   const skills = map.get("skills") ?? null;
-  const links = map.get("links") ?? null;
   const now = map.get("now") ?? null;
 
   return {
     hero: hero as HeroSection | null,
     about: about as AboutSection | null,
     skills: skills as SkillsSection | null,
-    links: links as LinksSection | null,
     now: now as NowSection | null,
   };
 }
