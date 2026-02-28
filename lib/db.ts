@@ -31,6 +31,8 @@ function getPoolConfig() {
   const escapedSchema = schema ? `"${schema.replace(/"/g, "\"\"")}"` : null;
   const searchPath = escapedSchema ? `${escapedSchema},public` : "public";
   const options = `-c search_path=${searchPath}`;
+  const maxFromEnv = Number.parseInt(process.env.PG_POOL_MAX ?? "", 10);
+  const max = Number.isFinite(maxFromEnv) && maxFromEnv > 0 ? maxFromEnv : 5;
 
   return {
     host: process.env.PG_HOST,
@@ -39,6 +41,9 @@ function getPoolConfig() {
     password: process.env.PG_PASSWORD,
     database: process.env.PG_DB,
     options,
+    max,
+    idleTimeoutMillis: 10_000,
+    connectionTimeoutMillis: 10_000,
   };
 }
 
@@ -67,10 +72,8 @@ function getPool(): Pool {
   }
 
   const pool = new Pool(getPoolConfig());
-  if (process.env.NODE_ENV !== "production") {
-    global.__pgPool = pool;
-    global.__pgPoolKey = poolKey;
-  }
+  global.__pgPool = pool;
+  global.__pgPoolKey = poolKey;
 
   return pool;
 }
