@@ -1,15 +1,31 @@
 import Link from "next/link";
-import { BriefcaseBusiness, Code2, FolderKanban, Newspaper, Sparkles, UserRound } from "lucide-react";
+import {
+  ArrowUpRight,
+  BriefcaseBusiness,
+  Code2,
+  FolderKanban,
+  GraduationCap,
+  Link2,
+  Newspaper,
+  Sparkles,
+  UserRound,
+} from "lucide-react";
+import { HiOutlineMail } from "react-icons/hi";
+import { SiGithub, SiLinkedin } from "react-icons/si";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { TypewriterHeadline } from "@/components/site/typewriter-headline";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { NewExperienceCards, NewProjectCards } from "@/components/site/new-content-cards";
 import { listPortfolioExperiences, listPortfolioProjects } from "@/lib/admin-cms";
 import { getAdminSessionEmail } from "@/lib/admin-auth";
 import { saveSiteInlineAction } from "@/lib/inline-admin-actions";
 import { getPublishedContent } from "@/lib/content";
+import { getUserLocale } from "@/lib/locale";
 import { getPortfolioSections } from "@/lib/portfolio";
+import { SITE_LINKS } from "@/lib/site-links";
 
 const skills = [
   "TypeScript",
@@ -27,6 +43,7 @@ type HomePageProps = {
 
 export default async function HomePage({ searchParams }: HomePageProps) {
   const params = (await searchParams) ?? {};
+  const locale = await getUserLocale();
   const adminEmail = await getAdminSessionEmail();
   const isAdmin = Boolean(adminEmail);
   const showPortfolioManage = isAdmin && params.manage === "portfolio";
@@ -59,15 +76,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     Array.isArray(sections.skills?.items) && sections.skills.items.length > 0
       ? sections.skills.items
       : skills;
-  const linksList =
-    Array.isArray(sections.links?.items) && sections.links.items.length > 0
-      ? sections.links.items
-      : [
-          { label: "GitHub", href: "https://github.com" },
-          { label: "LinkedIn", href: "https://linkedin.com" },
-          { label: "Email", href: "mailto:hello@example.com" },
-          { label: "Blog", href: "/blog" },
-        ];
+  const linksList = SITE_LINKS;
   const projectList =
     projects.length > 0
       ? projects.map((project) => ({
@@ -80,15 +89,56 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               : {},
         }))
       : [];
-  const experienceList =
-    experiences.length > 0
-      ? experiences.map((item) => ({
-          org: item.org,
-          role: item.role,
-          period: item.start_date ? `${item.start_date} - ${item.end_date || "Present"}` : item.end_date || "",
-          points: item.bullets ?? [],
-        }))
-      : [];
+  const experienceGroups = (() => {
+    const grouped = new Map<
+      string,
+      {
+        org: string;
+        entries: Array<{
+          id: string;
+          role: string;
+          startDate: string;
+          endDate: string;
+          points: string[];
+          sortOrder: number;
+        }>;
+      }
+    >();
+
+    for (const item of experiences) {
+      const key = item.org.trim().toLowerCase();
+      const prev = grouped.get(key);
+      const entry = {
+        id: item.id,
+        role: item.role,
+        startDate: item.start_date ?? "",
+        endDate: item.end_date ?? "",
+        points: item.bullets ?? [],
+        sortOrder: item.sort_order ?? 0,
+      };
+
+      if (prev) {
+        prev.entries.push(entry);
+      } else {
+        grouped.set(key, { org: item.org, entries: [entry] });
+      }
+    }
+
+    const groups = Array.from(grouped.values()).map((group) => {
+      const entries = [...group.entries].sort((a, b) => {
+        const aDate = a.startDate || a.endDate || "";
+        const bDate = b.startDate || b.endDate || "";
+        if (aDate !== bDate) {
+          return bDate.localeCompare(aDate);
+        }
+        return b.sortOrder - a.sortOrder;
+      });
+      const latestDate = entries[0]?.startDate || entries[0]?.endDate || "";
+      return { ...group, entries, latestDate };
+    });
+
+    return groups.sort((a, b) => b.latestDate.localeCompare(a.latestDate));
+  })();
 
   const getProjectLinks = (links: unknown): Array<{ key: string; href: string }> => {
     if (!links || typeof links !== "object" || Array.isArray(links)) {
@@ -99,6 +149,39 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     return ["github", "demo", "docs"]
       .map((key) => ({ key, href: typeof obj[key] === "string" ? obj[key] : "" }))
       .filter((item) => Boolean(item.href));
+  };
+
+  const tutoringText =
+    locale === "ko"
+      ? {
+          tutoringTitle: "Tutoring",
+          tutoringBadge: "CS Foundation · 1:1",
+          tutoringHeading: "Python으로 배우는 컴퓨터 사고력 기르기",
+          tutoringDescription:
+            "AI 시대에 진정 필요한 것은 단순 문법 암기형 코딩 능력이 아닌, 논리적 사고력을 기르는 것입니다.",
+          tutoringTags: ["8주 과정", "주 2회 · 회당 2시간", "Python 기초", "완전 초보 대상"],
+          tutoringFormats:
+            "코딩이 안 무섭고 어디서부터 시작할지 아는 상태를 목표로, 검색·디버깅 습관부터 실용 자동화/미니 프로그램 제작, 프로젝트·버전 관리까지 단계적으로 진행합니다.",
+          tutoringCta: "상담하러 가기",
+        }
+      : {
+          tutoringTitle: "Tutoring",
+          tutoringBadge: "CS Foundation · 1:1",
+          tutoringHeading: "Build Computational Thinking with Python",
+          tutoringDescription:
+            "In the AI era, what matters most is not memorizing syntax but developing strong logical thinking.",
+          tutoringTags: ["8-week program", "2 sessions/week · 2h each", "Python basics", "Complete beginners"],
+          tutoringFormats:
+            "The goal is to help you stop fearing code and know exactly where to start, from search/debug habits to practical automation mini-projects and version-controlled project delivery.",
+          tutoringCta: "Book a Consultation",
+        };
+
+  const getLinkIcon = (label: string) => {
+    const normalized = label.trim().toLowerCase();
+    if (normalized === "github") return <SiGithub className="size-4" />;
+    if (normalized === "linkedin") return <SiLinkedin className="size-4" />;
+    if (normalized === "email") return <HiOutlineMail className="size-4" />;
+    return null;
   };
 
   return (
@@ -175,7 +258,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             <Badge className="w-fit rounded-full px-4 py-1 text-xs uppercase tracking-[0.2em]">
               {heroBadge}
             </Badge>
-            <h1 className="text-4xl font-semibold leading-tight md:text-5xl">{heroTitle}</h1>
+            <TypewriterHeadline
+              text={heroTitle}
+              className="text-4xl font-semibold leading-tight md:text-5xl"
+            />
             <p className="max-w-xl text-lg text-muted-foreground">
               {heroSubtitle}
             </p>
@@ -185,10 +271,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   <Sparkles />
                   {heroCtaLabel}
                 </Link>
-              </Button>
-              <Button size="lg" variant="outline">
-                <FolderKanban />
-                View projects
               </Button>
             </div>
           </div>
@@ -246,7 +328,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         )}
       </section>
 
-      <section id="projects" className="space-y-6">
+      <section id="projects" className="scroll-mt-24 space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="flex items-center gap-2 text-2xl font-semibold">
             <FolderKanban className="size-6" />
@@ -357,30 +439,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               );
             })}
 
-            <Card className="border-dashed border-border/70 bg-card/50">
-              <CardHeader>
-                <CardTitle className="text-lg">Add Project</CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-3">
-                <input name="newProjectTitle" form="site-edit-form" placeholder="Title" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-                <input name="newProjectExcerpt" form="site-edit-form" placeholder="Excerpt" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-                <textarea name="newProjectDescription" form="site-edit-form" placeholder="Description" className="min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-                <input name="newProjectStackTags" form="site-edit-form" placeholder="Stack tags (comma separated)" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-                <input name="newProjectThumbnailUrl" form="site-edit-form" placeholder="Thumbnail URL" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-                <div className="grid gap-2 md:grid-cols-3">
-                  <input name="newProjectGithubUrl" form="site-edit-form" placeholder="GitHub URL" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-                  <input name="newProjectDemoUrl" form="site-edit-form" placeholder="Demo URL" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-                  <input name="newProjectDocsUrl" form="site-edit-form" placeholder="Docs URL" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-                </div>
-                <div className="grid gap-2 md:grid-cols-2">
-                  <select name="newProjectPinned" form="site-edit-form" defaultValue="0" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <option value="0">Not pinned</option>
-                    <option value="1">Pinned</option>
-                  </select>
-                  <input name="newProjectSortOrder" form="site-edit-form" defaultValue="0" type="number" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-                </div>
-              </CardContent>
-            </Card>
+            <NewProjectCards formId="site-edit-form" />
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2">
@@ -431,7 +490,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         )}
       </section>
 
-      <section id="experience" className="space-y-6">
+      <section id="experience" className="scroll-mt-24 space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="flex items-center gap-2 text-2xl font-semibold">
             <BriefcaseBusiness className="size-6" />
@@ -478,45 +537,51 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               </Card>
             ))}
 
-            <Card className="border-dashed border-border/70 bg-card/50">
-              <CardHeader>
-                <CardTitle className="text-lg">Add Experience</CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-3">
-                <div className="grid gap-2 md:grid-cols-2">
-                  <input name="newExperienceOrg" form="site-edit-form" placeholder="Organization" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-                  <input name="newExperienceRole" form="site-edit-form" placeholder="Role" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-                </div>
-                <div className="grid gap-2 md:grid-cols-3">
-                  <input name="newExperienceStartDate" form="site-edit-form" placeholder="Start (YYYY-MM)" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-                  <input name="newExperienceEndDate" form="site-edit-form" placeholder="End (YYYY-MM)" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-                  <input name="newExperienceSortOrder" form="site-edit-form" defaultValue="0" type="number" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-                </div>
-                <textarea name="newExperienceBullets" form="site-edit-form" placeholder="Bullets (one per line)" className="min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-              </CardContent>
-            </Card>
+            <NewExperienceCards formId="site-edit-form" />
           </div>
         ) : (
           <div className="space-y-6">
-            {experienceList.length === 0 ? (
+            {experienceGroups.length === 0 ? (
               <Card className="border-border/70 bg-card/80">
                 <CardContent className="py-8 text-sm text-muted-foreground">
                   No experiences yet.
                 </CardContent>
               </Card>
             ) : null}
-            {experienceList.map((item) => (
-              <Card key={`${item.org}-${item.role}`} className="border-border/70 bg-card/80">
+            {experienceGroups.map((group) => (
+              <Card key={group.org} className="border-border/70 bg-card/80">
                 <CardHeader>
-                  <CardTitle className="text-lg">
-                    {item.role} - {item.org}
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">{item.period}</p>
+                  <CardTitle className="text-lg">{group.org}</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2 text-sm text-muted-foreground">
-                  {item.points.map((point) => (
-                    <p key={point}>- {point}</p>
-                  ))}
+                <CardContent className="space-y-1 text-sm text-muted-foreground">
+                  {group.entries.map((entry, index) => {
+                    const period = entry.startDate
+                      ? `${entry.startDate} - ${entry.endDate || "Present"}`
+                      : entry.endDate || "";
+
+                    return (
+                      <div
+                        key={entry.id}
+                        className={`relative pl-8 ${index === group.entries.length - 1 ? "" : "pb-6"}`}
+                      >
+                        {index !== group.entries.length - 1 ? (
+                          <span className="absolute left-[7px] top-5 h-[calc(100%-0.25rem)] w-px bg-border" />
+                        ) : null}
+                        <span className="absolute left-0 top-1.5 size-4 rounded-full border-2 border-primary bg-background" />
+                        <div className="space-y-2">
+                          <p className="text-base font-medium text-foreground">{entry.role}</p>
+                          <p className="text-xs uppercase tracking-wide text-muted-foreground">{period}</p>
+                          {entry.points.length > 0 ? (
+                            <div className="space-y-1">
+                              {entry.points.map((point) => (
+                                <p key={`${entry.id}-${point}`}>- {point}</p>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </CardContent>
               </Card>
             ))}
@@ -526,16 +591,67 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
       <section className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-semibold">Links</h2>
+          <h2 className="flex items-center gap-2 text-2xl font-semibold">
+            <Link2 className="size-6" />
+            Links
+          </h2>
           <Separator className="hidden w-24 lg:block" />
         </div>
         <div className="flex flex-wrap gap-4 text-sm font-medium">
           {linksList.map((item) => (
-            <Link key={item.label} className="underline-offset-4 hover:underline" href={item.href}>
+            <Link
+              key={item.label}
+              className="inline-flex items-center gap-2 underline-offset-4 hover:underline"
+              href={item.href}
+            >
+              {getLinkIcon(item.label)}
               {item.label}
             </Link>
           ))}
         </div>
+      </section>
+
+      <section id="tutoring" className="scroll-mt-24 space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-2xl font-semibold">
+            <GraduationCap className="size-6 shrink-0" />
+            {tutoringText.tutoringTitle}
+          </h2>
+          <Separator className="hidden w-24 lg:block" />
+        </div>
+        <Card className="overflow-hidden border-border/70 bg-card/90">
+          <CardContent className="grid gap-6 p-0 md:grid-cols-[1.25fr_0.75fr]">
+            <div className="space-y-5 p-6 md:p-8">
+              <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs tracking-wide">
+                {tutoringText.tutoringBadge}
+              </Badge>
+              <div className="space-y-3">
+                <h3 className="text-2xl font-semibold leading-tight">
+                  {tutoringText.tutoringHeading}
+                </h3>
+                <p className="max-w-2xl text-sm text-muted-foreground">
+                  {tutoringText.tutoringDescription}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {tutoringText.tutoringTags.map((tag) => (
+                  <Badge key={tag} variant="outline">{tag}</Badge>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col justify-between gap-4 border-t border-border/70 bg-muted/30 p-6 md:border-l md:border-t-0 md:p-8">
+              <p className="text-sm text-muted-foreground">
+                {tutoringText.tutoringFormats}
+              </p>
+              <Button size="lg" className="w-full justify-between" asChild>
+                <Link href="/tutoring">
+                  {tutoringText.tutoringCta}
+                  <ArrowUpRight />
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </section>
 
       <section className="space-y-6">
@@ -556,36 +672,39 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               </CardContent>
             </Card>
           ) : null}
-          {blogPreview.map((item) => {
+          {blogPreview.map((item, index) => {
             const content = (
-              <Card className="border-border/70 bg-card/80 transition hover:-translate-y-0.5 hover:border-foreground/30">
-                {item.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={item.imageUrl}
-                    alt={item.title}
-                    className="h-[25rem] w-full rounded-t-xl object-cover"
-                  />
-                ) : null}
-                <CardHeader>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{item.date}</span>
-                    <Badge variant="secondary">{item.type}</Badge>
-                  </div>
-                  <CardTitle className="text-lg">{item.title}</CardTitle>
-                  {item.tags.length > 0 ? (
-                    <div className="flex flex-wrap gap-1.5 pt-1">
-                      {item.tags.map((tag) => (
-                        <Badge key={`${item.title}-${tag}`} variant="outline">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
+              <Card
+                className="motion-reveal media-zoom card-hover-lift overflow-hidden border-border/70 bg-card/80 hover:border-foreground/30"
+                style={{ animationDelay: `${index * 70}ms` }}
+              >
+                <div className="flex items-start gap-4 p-4">
+                  {item.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={item.imageUrl}
+                      alt={item.title}
+                      className="h-24 w-40 shrink-0 rounded-md object-cover"
+                    />
                   ) : null}
-                </CardHeader>
-                <CardContent className="text-sm text-muted-foreground">
-                  {item.excerpt}
-                </CardContent>
+                  <div className="min-w-0 space-y-2">
+                    <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                      <span>{item.date}</span>
+                      <Badge variant="secondary">{item.type}</Badge>
+                    </div>
+                    <CardTitle className="text-base leading-snug">{item.title}</CardTitle>
+                    <p className="text-sm text-muted-foreground">{item.excerpt}</p>
+                    {item.tags.length > 0 ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        {item.tags.map((tag) => (
+                          <Badge key={`${item.title}-${tag}`} variant="outline">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
               </Card>
             );
 
@@ -614,4 +733,3 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     </>
   );
 }
-
