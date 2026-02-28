@@ -161,7 +161,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             "AI 시대에 진정 필요한 것은 단순 문법 암기형 코딩 능력이 아닌, 논리적 사고력을 기르는 것입니다.",
           tutoringTags: ["8주 과정", "주 2회 · 회당 2시간", "Python 기초", "완전 초보 대상"],
           tutoringFormats:
-            "코딩이 안 무섭고 어디서부터 시작할지 아는 상태를 목표로, 검색·디버깅 습관부터 실용 자동화/미니 프로그램 제작, 프로젝트·버전 관리까지 단계적으로 진행합니다.",
+            "스스로 컴퓨터 사고력을 바탕으로 프로젝트를 감당할 수 있도록, 검색·디버깅 습관부터 실용 자동화/미니 프로그램 제작, 프로젝트·버전 관리까지 단계적으로 진행합니다.",
           tutoringCta: "상담하러 가기",
         }
       : {
@@ -644,10 +644,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 {tutoringText.tutoringFormats}
               </p>
               <Button size="lg" className="w-full justify-between" asChild>
-                <Link href="/tutoring">
+                <a href="https://lighteko.dev/tutoring">
                   {tutoringText.tutoringCta}
                   <ArrowUpRight />
-                </Link>
+                </a>
               </Button>
             </div>
           </CardContent>

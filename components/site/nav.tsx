@@ -46,7 +46,7 @@ export function SiteNav({ isAdmin }: SiteNavProps) {
   const links = [
     { href: "/", label: text.home },
     { href: "/blog", label: text.blog },
-    { href: "/tutoring", label: text.tutoring },
+    { href: "https://lighteko.dev/tutoring", label: text.tutoring, external: true },
     { href: "/#projects", label: text.projects, sectionId: "projects" },
     { href: "/#experience", label: text.experience, sectionId: "experience" },
   ];
@@ -92,18 +92,28 @@ export function SiteNav({ isAdmin }: SiteNavProps) {
           </Link>
           <nav className="hidden items-center gap-6 text-sm font-medium text-muted-foreground md:flex">
             {links.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={
-                  item.sectionId
-                    ? (event) => handleSectionLinkClick(event, item.sectionId as string)
-                    : undefined
-                }
-                className="transition-colors hover:text-foreground"
-              >
-                {item.label}
-              </Link>
+              item.external ? (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className="transition-colors hover:text-foreground"
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={
+                    item.sectionId
+                      ? (event) => handleSectionLinkClick(event, item.sectionId as string)
+                      : undefined
+                  }
+                  className="transition-colors hover:text-foreground"
+                >
+                  {item.label}
+                </Link>
+              )
             ))}
           </nav>
           <div className="flex items-center gap-3">

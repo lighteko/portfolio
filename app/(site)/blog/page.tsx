@@ -15,7 +15,6 @@ import { DeleteContentButton } from "@/components/blog/delete-content-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { getAdminSessionEmail } from "@/lib/admin-auth";
 import { deleteContentInlineAction } from "@/lib/inline-admin-actions";
 import { getPublishedContent } from "@/lib/content";
@@ -79,6 +78,18 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
     edit: "Edit",
     openSource: "Open Source",
   };
+  const filterChipClass = (active: boolean) =>
+    cn(
+      "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium transition",
+      active
+        ? "border-foreground bg-foreground text-background"
+        : "border-border bg-background/70 text-muted-foreground hover:text-foreground"
+    );
+  const viewToggleClass = (active: boolean) =>
+    cn(
+      "inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs transition",
+      active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+    );
 
   const buildBlogHref = (updates: Record<string, string | null>) => {
     const search = new URLSearchParams();
@@ -101,195 +112,107 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
   };
 
   return (
-    <section className="space-y-8">
+    <section className="space-y-5">
       <div className="space-y-3">
-        <h1 className="flex items-center gap-2 text-3xl font-semibold">
-          <Rss className="size-7" />
-          {uiText.blogTitle}
-        </h1>
-        <p className="max-w-2xl text-muted-foreground">
-          {uiText.blogDescription}
-        </p>
-        <Card className="border-border/70 bg-card/70">
-          <CardContent className="space-y-4 p-4">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div className="space-y-1">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">{uiText.layout}</p>
-                <div className="inline-flex rounded-lg border border-border bg-muted/30 p-1">
-                  <Link
-                    href={buildBlogHref({ view: "grid" })}
-                    className={cn(
-                      "inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition",
-                      viewMode === "grid"
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    <Grid3X3 className="size-4" />
-                    {uiText.grid}
-                  </Link>
-                  <Link
-                    href={buildBlogHref({ view: "list" })}
-                    className={cn(
-                      "inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition",
-                      viewMode === "list"
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    <List className="size-4" />
-                    {uiText.list}
-                  </Link>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">{uiText.thumbnail}</p>
-                <div className="inline-flex rounded-lg border border-border bg-muted/30 p-1">
-                  <Link
-                    href={buildBlogHref({ thumb: "on" })}
-                    className={cn(
-                      "inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition",
-                      showThumbnail
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    <ImageIcon className="size-4" />
-                    {uiText.show}
-                  </Link>
-                  <Link
-                    href={buildBlogHref({ thumb: "off" })}
-                    className={cn(
-                      "inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition",
-                      !showThumbnail
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    <ImageOff className="size-4" />
-                    {uiText.hide}
-                  </Link>
-                </div>
-              </div>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div className="space-y-1.5">
+            <h1 className="flex items-center gap-2 text-3xl font-semibold">
+              <Rss className="size-7" />
+              {uiText.blogTitle}
+            </h1>
+            <p className="max-w-xl text-sm text-muted-foreground">{uiText.blogDescription}</p>
+          </div>
+          {isAdmin ? (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Button size="sm" variant="outline" asChild>
+                <Link href="/blog/new">
+                  <FilePlus2 />
+                  {uiText.addPost}
+                </Link>
+              </Button>
+              <Button size="sm" variant="outline" asChild>
+                <Link href="/blog/new/external">
+                  <Globe2 />
+                  {uiText.addExternal}
+                </Link>
+              </Button>
+              <Button size="sm" variant="outline" asChild>
+                <Link href="/blog/new/bookmark">
+                  <BookmarkPlus />
+                  {uiText.addBookmark}
+                </Link>
+              </Button>
+              <Button size="sm" variant={isManageMode ? "default" : "outline"} asChild>
+                <Link href={isManageMode ? buildBlogHref({ manage: null }) : buildBlogHref({ manage: "1" })}>
+                  <PenSquare />
+                  {isManageMode ? uiText.done : uiText.manageFeed}
+                </Link>
+              </Button>
             </div>
+          ) : null}
+        </div>
 
-            {isAdmin ? (
-              <div className="flex flex-wrap gap-2 border-t border-border/70 pt-4">
-                <Button size="sm" asChild>
-                  <Link href="/blog/new">
-                    <FilePlus2 />
-                    {uiText.addPost}
-                  </Link>
-                </Button>
-                <Button size="sm" variant="outline" asChild>
-                  <Link href="/blog/new/external">
-                    <Globe2 />
-                    {uiText.addExternal}
-                  </Link>
-                </Button>
-                <Button size="sm" variant="outline" asChild>
-                  <Link href="/blog/new/bookmark">
-                    <BookmarkPlus />
-                    {uiText.addBookmark}
-                  </Link>
-                </Button>
-                <Button size="sm" variant={isManageMode ? "default" : "outline"} asChild>
-                  <Link href={isManageMode ? buildBlogHref({ manage: null }) : buildBlogHref({ manage: "1" })}>
-                    <PenSquare />
-                    {isManageMode ? uiText.done : uiText.manageFeed}
-                  </Link>
-                </Button>
-              </div>
-            ) : null}
+        <div className="sticky top-20 z-20 space-y-2 rounded-lg bg-background/80 p-1 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border/70 bg-card/70 p-2">
+            <div className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/30 p-0.5">
+              <span className="px-1 text-[11px] uppercase tracking-wider text-muted-foreground">{uiText.layout}</span>
+              <Link href={buildBlogHref({ view: "grid" })} className={viewToggleClass(viewMode === "grid")}>
+                <Grid3X3 className="size-3.5" />
+                {uiText.grid}
+              </Link>
+              <Link href={buildBlogHref({ view: "list" })} className={viewToggleClass(viewMode === "list")}>
+                <List className="size-3.5" />
+                {uiText.list}
+              </Link>
+            </div>
+            <div className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/30 p-0.5">
+              <span className="px-1 text-[11px] uppercase tracking-wider text-muted-foreground">{uiText.thumbnail}</span>
+              <Link href={buildBlogHref({ thumb: "on" })} className={viewToggleClass(showThumbnail)}>
+                <ImageIcon className="size-3.5" />
+                {uiText.show}
+              </Link>
+              <Link href={buildBlogHref({ thumb: "off" })} className={viewToggleClass(!showThumbnail)}>
+                <ImageOff className="size-3.5" />
+                {uiText.hide}
+              </Link>
+            </div>
+            <span className="mx-1 hidden h-5 w-px bg-border sm:block" />
+            <span className="text-[11px] uppercase tracking-wider text-muted-foreground">{uiText.contentType}</span>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Link href={buildBlogHref({ type: null })} className={filterChipClass(selectedType === "all")}>
+                {uiText.all}
+              </Link>
+              <Link href={buildBlogHref({ type: "post" })} className={filterChipClass(selectedType === "post")}>
+                {uiText.post}
+              </Link>
+              <Link href={buildBlogHref({ type: "external" })} className={filterChipClass(selectedType === "external")}>
+                {uiText.external}
+              </Link>
+              <Link href={buildBlogHref({ type: "bookmark" })} className={filterChipClass(selectedType === "bookmark")}>
+                {uiText.bookmark}
+              </Link>
+            </div>
+            <span className="ml-auto text-xs text-muted-foreground">{filteredItems.length}</span>
+          </div>
 
-            <div className="space-y-4 border-t border-border/70 pt-4">
-              <div className="space-y-2">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">{uiText.contentType}</p>
-                <div className="flex flex-wrap gap-2">
-                  <Link
-                    href={buildBlogHref({ type: null })}
-                    className={cn(
-                      "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition",
-                      selectedType === "all"
-                        ? "border-foreground bg-foreground text-background"
-                        : "border-border text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {uiText.all}
-                  </Link>
-                  <Link
-                    href={buildBlogHref({ type: "post" })}
-                    className={cn(
-                      "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition",
-                      selectedType === "post"
-                        ? "border-foreground bg-foreground text-background"
-                        : "border-border text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {uiText.post}
-                  </Link>
-                  <Link
-                    href={buildBlogHref({ type: "external" })}
-                    className={cn(
-                      "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition",
-                      selectedType === "external"
-                        ? "border-foreground bg-foreground text-background"
-                        : "border-border text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {uiText.external}
-                  </Link>
-                  <Link
-                    href={buildBlogHref({ type: "bookmark" })}
-                    className={cn(
-                      "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition",
-                      selectedType === "bookmark"
-                        ? "border-foreground bg-foreground text-background"
-                        : "border-border text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {uiText.bookmark}
-                  </Link>
-                </div>
-              </div>
-
-              {availableTags.length > 0 ? (
-                <div className="space-y-2">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">{uiText.tagFilter}</p>
-                <div className="flex flex-wrap gap-2">
-                  <Link
-                    href={buildBlogHref({ tag: null })}
-                    className={cn(
-                      "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition",
-                      !selectedTag
-                        ? "border-foreground bg-foreground text-background"
-                        : "border-border text-muted-foreground hover:text-foreground"
-                    )}
-                  >
+          {availableTags.length > 0 ? (
+            <div className="flex items-center gap-2 rounded-lg border border-border/70 bg-card/70 p-2">
+              <p className="shrink-0 text-[11px] uppercase tracking-wider text-muted-foreground">{uiText.tagFilter}</p>
+              <div className="flex-1 overflow-x-auto">
+                <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                  <Link href={buildBlogHref({ tag: null })} className={filterChipClass(!selectedTag)}>
                     {uiText.all}
                   </Link>
                   {availableTags.map((tag) => (
-                    <Link
-                      key={tag}
-                      href={buildBlogHref({ tag })}
-                      className={cn(
-                        "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition",
-                        selectedTag === tag
-                          ? "border-foreground bg-foreground text-background"
-                          : "border-border text-muted-foreground hover:text-foreground"
-                      )}
-                    >
+                    <Link key={tag} href={buildBlogHref({ tag })} className={filterChipClass(selectedTag === tag)}>
                       {tag}
                     </Link>
                   ))}
                 </div>
-                </div>
-              ) : null}
+              </div>
             </div>
-          </CardContent>
-        </Card>
-        <Separator />
+          ) : null}
+        </div>
       </div>
       <div
         id="feed"
@@ -318,7 +241,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
                   alt={item.title}
                   className={cn(
                     "w-full object-cover",
-                    viewMode === "grid" ? "h-[25rem] rounded-t-xl" : "h-60"
+                    viewMode === "grid" ? "h-72 rounded-t-xl" : "h-44"
                   )}
                 />
               ) : null}
@@ -327,7 +250,9 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
                   <span>{item.date}</span>
                   <Badge variant="secondary">{typeLabelMap[item.type]}</Badge>
                 </div>
-                <CardTitle className="text-xl">{item.title}</CardTitle>
+                <CardTitle className="text-xl [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden">
+                  {item.title}
+                </CardTitle>
                 {item.tags.length > 0 ? (
                   <div className="flex flex-wrap gap-1.5 pt-1">
                     {item.tags.map((tag) => (
@@ -338,7 +263,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
                   </div>
                 ) : null}
               </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">
+              <CardContent className="text-sm text-muted-foreground [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3] overflow-hidden">
                 {item.excerpt}
               </CardContent>
             </Card>
