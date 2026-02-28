@@ -97,6 +97,22 @@ export async function getAdminPostById(id: string): Promise<AdminPostDetail | nu
   return result.rows[0] ?? null;
 }
 
+export async function getAdminPostBySlug(slug: string): Promise<AdminPostDetail | null> {
+  if (!isPgConfigured()) {
+    return null;
+  }
+
+  const result = await query<AdminPostDetail>(
+    `select id, type, status, title, slug, excerpt, tags, content_md, cover_image_url
+     from ${tableName("content_items")}
+     where slug = $1 and type = 'post'
+     limit 1`,
+    [slug]
+  );
+
+  return result.rows[0] ?? null;
+}
+
 export async function resolveUniquePostSlug(baseSlug: string, excludeId?: string): Promise<string> {
   if (!isPgConfigured()) {
     return baseSlug;
