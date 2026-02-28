@@ -3,10 +3,10 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Portfolio & Blog",
-    template: "%s - Portfolio & Blog",
+    default: "Heejoon Yi",
+    template: "%s - Heejoon Yi",
   },
-  description: "A personal portfolio and unified blog feed.",
+  description: "Backend-focused full-stack engineer. I design, ship, and operate content systems.",
 };
 
 export default function RootLayout({
