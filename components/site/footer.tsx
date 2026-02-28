@@ -1,3 +1,5 @@
+import { SITE_LINKS } from "@/lib/site-links";
+
 export function SiteFooter() {
   return (
     <footer className="border-t border-border/60 py-10">
@@ -7,15 +9,11 @@ export function SiteFooter() {
           <p>Product-minded engineer building thoughtful web experiences.</p>
         </div>
         <div className="flex flex-wrap gap-4">
-          <a className="hover:text-foreground" href="https://github.com">
-            GitHub
-          </a>
-          <a className="hover:text-foreground" href="https://linkedin.com">
-            LinkedIn
-          </a>
-          <a className="hover:text-foreground" href="mailto:hello@example.com">
-            Email
-          </a>
+          {SITE_LINKS.map((item) => (
+            <a key={item.label} className="hover:text-foreground" href={item.href}>
+              {item.label}
+            </a>
+          ))}
         </div>
       </div>
     </footer>
