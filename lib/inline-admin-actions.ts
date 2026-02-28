@@ -318,28 +318,40 @@ export async function saveSiteInlineAction(formData: FormData) {
     });
   }
 
-  const newProjectTitle = String(formData.get("newProjectTitle") ?? "").trim();
-  if (newProjectTitle) {
-    const newProjectStackTags = String(formData.get("newProjectStackTags") ?? "")
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
+  const newProjectTitles = formData.getAll("newProjectTitle").map((item) => String(item).trim());
+  const newProjectExcerpts = formData.getAll("newProjectExcerpt").map((item) => String(item).trim());
+  const newProjectDescriptions = formData.getAll("newProjectDescription").map((item) => String(item).trim());
+  const newProjectStackTags = formData.getAll("newProjectStackTags").map((item) => String(item));
+  const newProjectThumbnailUrls = formData.getAll("newProjectThumbnailUrl").map((item) => String(item).trim());
+  const newProjectGithubUrls = formData.getAll("newProjectGithubUrl").map((item) => String(item).trim());
+  const newProjectDemoUrls = formData.getAll("newProjectDemoUrl").map((item) => String(item).trim());
+  const newProjectDocsUrls = formData.getAll("newProjectDocsUrl").map((item) => String(item).trim());
+  const newProjectPinnedValues = formData.getAll("newProjectPinned").map((item) => String(item));
+  const newProjectSortOrders = formData.getAll("newProjectSortOrder").map((item) => Number(String(item)) || 0);
+
+  for (let i = 0; i < newProjectTitles.length; i += 1) {
+    if (!newProjectTitles[i]) {
+      continue;
+    }
 
     await createPortfolioProject({
-      title: newProjectTitle,
-      excerpt: String(formData.get("newProjectExcerpt") ?? "").trim(),
-      description: String(formData.get("newProjectDescription") ?? "").trim(),
-      stackTags: newProjectStackTags,
-      thumbnailUrl: String(formData.get("newProjectThumbnailUrl") ?? "").trim(),
+      title: newProjectTitles[i],
+      excerpt: newProjectExcerpts[i] ?? "",
+      description: newProjectDescriptions[i] ?? "",
+      stackTags: (newProjectStackTags[i] ?? "")
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean),
+      thumbnailUrl: newProjectThumbnailUrls[i] ?? "",
       links: Object.fromEntries(
         [
-          ["github", String(formData.get("newProjectGithubUrl") ?? "").trim()],
-          ["demo", String(formData.get("newProjectDemoUrl") ?? "").trim()],
-          ["docs", String(formData.get("newProjectDocsUrl") ?? "").trim()],
+          ["github", newProjectGithubUrls[i] ?? ""],
+          ["demo", newProjectDemoUrls[i] ?? ""],
+          ["docs", newProjectDocsUrls[i] ?? ""],
         ].filter(([, value]) => Boolean(value))
       ),
-      pinned: String(formData.get("newProjectPinned") ?? "0") === "1",
-      sortOrder: Number(String(formData.get("newProjectSortOrder") ?? "0")) || 0,
+      pinned: newProjectPinnedValues[i] === "1",
+      sortOrder: newProjectSortOrders[i] ?? 0,
     });
   }
 
@@ -374,19 +386,28 @@ export async function saveSiteInlineAction(formData: FormData) {
     });
   }
 
-  const newExperienceOrg = String(formData.get("newExperienceOrg") ?? "").trim();
-  const newExperienceRole = String(formData.get("newExperienceRole") ?? "").trim();
-  if (newExperienceOrg && newExperienceRole) {
+  const newExperienceOrgs = formData.getAll("newExperienceOrg").map((item) => String(item).trim());
+  const newExperienceRoles = formData.getAll("newExperienceRole").map((item) => String(item).trim());
+  const newExperienceStartDates = formData.getAll("newExperienceStartDate").map((item) => String(item).trim());
+  const newExperienceEndDates = formData.getAll("newExperienceEndDate").map((item) => String(item).trim());
+  const newExperienceBullets = formData.getAll("newExperienceBullets").map((item) => String(item));
+  const newExperienceSortOrders = formData.getAll("newExperienceSortOrder").map((item) => Number(String(item)) || 0);
+
+  for (let i = 0; i < newExperienceOrgs.length; i += 1) {
+    if (!newExperienceOrgs[i] || !newExperienceRoles[i]) {
+      continue;
+    }
+
     await createPortfolioExperience({
-      org: newExperienceOrg,
-      role: newExperienceRole,
-      startDate: String(formData.get("newExperienceStartDate") ?? "").trim(),
-      endDate: String(formData.get("newExperienceEndDate") ?? "").trim(),
-      bullets: String(formData.get("newExperienceBullets") ?? "")
+      org: newExperienceOrgs[i],
+      role: newExperienceRoles[i],
+      startDate: newExperienceStartDates[i] ?? "",
+      endDate: newExperienceEndDates[i] ?? "",
+      bullets: (newExperienceBullets[i] ?? "")
         .split("\n")
         .map((item) => item.trim())
         .filter(Boolean),
-      sortOrder: Number(String(formData.get("newExperienceSortOrder") ?? "0")) || 0,
+      sortOrder: newExperienceSortOrders[i] ?? 0,
     });
   }
 
